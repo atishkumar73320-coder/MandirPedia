@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MandirPedia — The Living Encyclopedia of Indian Temples</title>
+  
+  <!-- Fonts: Cinzel, Plus Jakarta Sans, Newsreader -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet & MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-dark">
+  <div id="app" class="app-root">
+
+    <!-- FLOATING TOP NAVIGATION ISLAND (ZERO CLUTTER, PURE TYPOGRAPHY) -->
+    <header class="top-island">
+      <div class="island-left">
+        <a href="/" class="brand-monogram" title="MandirPedia — The Living Encyclopedia of Indian Temples">
+          <div class="brand-crest">
+            <svg viewBox="0 0 32 32" fill="none" class="crest-svg" xmlns="http://www.w3.org/2000/svg">
+              <!-- Sacred Temple Shikhara Finial in Warm Gold Foil -->
+              <path d="M16 2.5L17.5 6.5H14.5L16 2.5Z" fill="url(#goldGrad)" />
+              <path d="M16 6.5L21.5 13H10.5L16 6.5Z" stroke="url(#goldGrad)" stroke-width="1.3" stroke-linejoin="round" />
+              <path d="M13 13L8.5 21.5H23.5L19 13" stroke="url(#goldGrad)" stroke-width="1.3" stroke-linejoin="round" />
+              <path d="M6.5 21.5L4 27.5H28L25.5 21.5" stroke="url(#goldGrad)" stroke-width="1.3" stroke-linejoin="round" />
+              <circle cx="16" cy="18" r="1.5" fill="#fff5ea" />
+              <line x1="3" y1="27.5" x2="29" y2="27.5" stroke="url(#goldGrad)" stroke-width="1.3" stroke-linecap="round" />
+              <defs>
+                <linearGradient id="goldGrad" x1="4" y1="2.5" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#fff2df"/>
+                  <stop offset="40%" stop-color="#e8b86d"/>
+                  <stop offset="100%" stop-color="#b66f30"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-text-lockup">
+            <div class="brand-title-wrap">
+              <span class="brand-mandir">MANDIR</span><span class="brand-pedia">PEDIA</span>
+              <span class="brand-devanagari">मंदिरपीडिया</span>
+            </div>
+            <span class="brand-sub">THE ENCYCLOPEDIA OF SACRED INDIAN ARCHITECTURE</span>
+          </div>
+        </a>
+        <div class="sync-indicator" id="syncStatusBadge" title="Automated background sync from Wikidata & Wikipedia">
+          <span class="pulsing-dot"></span>
+          <span class="sync-text" id="syncCountLabel">Loading archive...</span>
+        </div>
+      </div>
+
+      <!-- Center Search & Command Trigger -->
+      <div class="island-center">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search any temple, deity, dynasty, or district... (/ to focus)" 
+            autocomplete="off" 
+            spellcheck="false"
+          >
+          <button id="clearSearchBtn" class="clear-btn" aria-label="Clear search" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <kbd class="shortcut-kbd">/</kbd>
+        </div>
+      </div>
+
+      <!-- Right Controls: View Switcher, Near Me, Filters -->
+      <div class="island-right">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+          <button class="toggle-btn active" id="viewMapBtn" title="Interactive Map Explorer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            <span>Atlas</span>
+          </button>
+          <button class="toggle-btn" id="viewGridBtn" title="Visual Monograph Archive">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Archive</span>
+          </button>
+        </div>
+
+        <!-- Near Me GPS Button -->
+        <button class="icon-action-btn" id="nearMeBtn" title="Find Temples Near Me">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+          <span class="desktop-only">Near Me</span>
+        </button>
+
+        <!-- Filters Toggle -->
+        <button class="icon-action-btn" id="filterToggleBtn" title="Filter by State, Era & Architecture">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <span class="filter-count-badge" id="activeFilterBadge" style="display: none;">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- FLOATING FILTER DRAWER & QUICK DEITY CHIPS -->
+    <div class="filters-bar" id="filtersBar">
+      <div class="quick-chips" id="deityChips">
+        <button class="chip active" data-deity="all">All Sanctuaries</button>
+        <button class="chip" data-deity="Shiva">Lord Shiva</button>
+        <button class="chip" data-deity="Vishnu">Lord Vishnu</button>
+        <button class="chip" data-deity="Shakti / Devi">Shakti / Devi</button>
+        <button class="chip" data-deity="Surya">Surya (Sun)</button>
+        <button class="chip" data-deity="Ganesha">Ganesha & Murugan</button>
+        <button class="chip" data-deity="Jain Tirthankara">Jain Tirthankara</button>
+        <button class="chip" data-deity="Gautama Buddha">Buddha</button>
+      </div>
+
+      <!-- Advanced Filter Panel (Collapsible) -->
+      <div class="advanced-filter-panel" id="advancedFilterPanel" style="display: none;">
+        <div class="filter-group">
+          <label>State / Territory</label>
+          <select id="stateFilter">
+            <option value="all">All States of India</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Architectural Style</label>
+          <select id="styleFilter">
+            <option value="all">All Architectural Styles</option>
+            <option value="Dravidian">Dravidian Architecture (South)</option>
+            <option value="Nagara">Nagara Architecture (North)</option>
+            <option value="Vesara">Vesara Architecture (Deccan)</option>
+            <option value="Kalinga">Kalinga Architecture (Odisha)</option>
+            <option value="Hoysala">Hoysala Architecture</option>
+            <option value="Māru-Gurjara">Māru-Gurjara (Gujarat/Rajasthan)</option>
+            <option value="Rock-Cut">Rock-Cut & Cave Temples</option>
+          </select>
+        </div>
+
+        <div class="filter-group filter-actions">
+          <button class="reset-filters-btn" id="resetFiltersBtn">Reset All Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE CANVAS -->
+    <main class="main-viewport">
+      <!-- 1. MAP VIEW CONTAINER -->
+      <div id="mapView" class="map-container active">
+        <div id="leafletMap" class="leaflet-map-canvas"></div>
+      </div>
+
+      <!-- 2. GRID ARCHIVE VIEW CONTAINER -->
+      <div id="gridView" class="grid-container" style="display: none;">
+        <div class="grid-header">
+          <div class="results-meta">
+            <h2 id="gridTitle">The MandirPedia Archive</h2>
+            <p id="gridSub">Living encyclopedia of <span id="resultsCount">0</span> temples across India</p>
+          </div>
+        </div>
+        <div class="cards-grid" id="templeCardsGrid">
+          <!-- Dynamically populated temple cards -->
+        </div>
+        <div class="grid-pagination" id="gridPagination" style="display: none;">
+          <button id="loadMoreBtn" class="load-more-btn">Explore More Temples</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT-SIDE SLIDING TEMPLE DOSSIER (EXQUISITE EDITORIAL DETAIL VIEW) -->
+    <aside class="temple-dossier" id="templeDossier" aria-hidden="true">
+      <div class="dossier-overlay" id="dossierOverlay"></div>
+      <div class="dossier-content">
+        <!-- Close Button -->
+        <button class="dossier-close-btn" id="dossierCloseBtn" aria-label="Close dossier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Loading State Spinner -->
+        <div class="dossier-loader" id="dossierLoader" style="display: none;">
+          <div class="sanctuary-spinner"></div>
+          <span>Retrieving Wikipedia monograph & high-res imagery...</span>
+        </div>
+
+        <!-- Loaded Content View -->
+        <div class="dossier-body" id="dossierBody">
+          <!-- Hero Image Banner with Subtle Parallax & Gradient Mask -->
+          <div class="hero-image-frame" id="heroImageFrame">
+            <img id="dossierHeroImg" src="" alt="Temple hero photograph" loading="eager">
+            <div class="hero-gradient-overlay"></div>
+            <div class="hero-heritage-tag" id="dossierHeritageTag" style="display: none;"></div>
+          </div>
+
+          <!-- Dossier Header Section -->
+          <div class="dossier-header-section">
+            <div class="dossier-eyebrow" id="dossierEyebrow">
+              <span id="dossierDeityBadge"></span>
+              <span class="bullet-dot">•</span>
+              <span id="dossierStyleBadge"></span>
+            </div>
+            
+            <h1 class="dossier-title" id="dossierTitle">Temple Name</h1>
+            <div class="dossier-native-name" id="dossierNativeName"></div>
+
+            <div class="dossier-location-strip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="geo-icon">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span id="dossierLocation">District, State</span>
+              <span class="coords-pill" id="dossierCoords" title="Click to copy GPS coordinates">
+                <span id="coordsText">00.0000° N, 00.0000° E</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="copy-icon">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </span>
+            </div>
+
+            <!-- Quick Direct Actions -->
+            <div class="dossier-actions-row">
+              <a href="#" target="_blank" rel="noopener noreferrer" class="action-btn primary-action" id="mapsActionBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>
+                <span>Navigate on Maps</span>
+              </a>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="action-btn secondary-action" id="wikiActionBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span>Wikipedia Monograph</span>
+              </a>
+              <button class="action-btn secondary-action" id="shareActionBtn" title="Copy link to this temple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Key Architectural Attributes Grid -->
+          <div class="dossier-attributes-grid">
+            <div class="attribute-cell">
+              <span class="attr-label">Presiding Deity</span>
+              <span class="attr-val" id="attrDeity">—</span>
+            </div>
+            <div class="attribute-cell">
+              <span class="attr-label">Dynasty / Era</span>
+              <span class="attr-val" id="attrDynasty">—</span>
+            </div>
+            <div class="attribute-cell">
+              <span class="attr-label">Architecture</span>
+              <span class="attr-val" id="attrStyle">—</span>
+            </div>
+            <div class="attribute-cell">
+              <span class="attr-label">Heritage Status</span>
+              <span class="attr-val" id="attrHeritage">—</span>
+            </div>
+          </div>
+
+          <!-- Wikipedia Narrative Section -->
+          <div class="dossier-narrative-section">
+            <h3 class="section-heading">Historical & Spiritual Narrative</h3>
+            <div class="narrative-content" id="dossierExtract">
+              <!-- Live extract inserted here -->
+            </div>
+          </div>
+
+          <!-- High-Resolution Wikimedia Photo Gallery -->
+          <div class="dossier-gallery-section" id="dossierGallerySection">
+            <h3 class="section-heading">Architectural Gallery</h3>
+            <div class="gallery-grid" id="dossierGalleryGrid">
+              <!-- Dynamic image tiles -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <!-- Leaflet & MarkerCluster JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- Modular Application Scripts -->
+  <script src="js/dossier.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
